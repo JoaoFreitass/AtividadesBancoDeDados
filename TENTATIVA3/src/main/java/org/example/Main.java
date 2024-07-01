@@ -19,6 +19,10 @@ public class Main {
             System.out.println("4 - Exibir todos os clientes que têm uma profissão específica");
             System.out.println("5 - Encontrar todos os filmes em uma categoria específica com quantidade disponível maior que 5");
             System.out.println("6 - Listar todos os atores que participaram de filmes com um determinado título");
+            System.out.println("7 - Obter o endereço completo de um cliente específico");
+            System.out.println("8 - Listar todos os filmes e seus respectivos gêneros e categorias");
+            System.out.println("9 - Mostrar todos os clientes que alugaram um filme específico e a data de locação");
+            System.out.println("10 - Exibir a lista de clientes com multas superiores a um valor específico.  //não funcional");
             System.out.println("0 - Sair");
 
             opcao = scanner.nextInt();
@@ -42,6 +46,18 @@ public class Main {
                     break;
                 case 6:
                     listarAtoresPorTituloFilme();
+                    break;
+                case 7:
+                    obterEnderecoCompletoCliente();
+                    break;
+                case 8:
+                    listarFilmesGenerosCategorias();
+                    break;
+                case 9:
+                    listarClientesPorFilme();
+                    break;
+                case 10:
+                    listarClientesComMultasSuperiores();
                     break;
                 case 0:
                     System.out.println("Encerrando o programa...");
@@ -137,6 +153,70 @@ public class Main {
             for (Ator ator : atores) {
                 System.out.println(ator);
             }
+        }
+    }
+
+    private static void obterEnderecoCompletoCliente() {
+        System.out.println("Digite o código do cliente:");
+        int codCliente = scanner.nextInt();
+        scanner.nextLine(); // Limpar o buffer do scanner
+
+        Endereco endereco = database.obterEnderecoCliente(codCliente);
+
+        if (endereco != null) {
+            System.out.println("Endereço do cliente:");
+            System.out.println(endereco);
+        } else {
+            System.out.println("Nenhum endereço encontrado para o cliente especificado.");
+        }
+    }
+
+    private static void listarFilmesGenerosCategorias() {
+        List<FilmeGeneroCategoria> filmes = database.listarFilmesGenerosCategorias();
+
+        System.out.println("Filmes, seus gêneros e categorias:");
+        for (FilmeGeneroCategoria filme : filmes) {
+            System.out.println(filme);
+        }
+    }
+
+    private static void listarClientesPorFilme() {
+        System.out.println("Digite o código do filme:");
+        int codFilme = scanner.nextInt();
+        scanner.nextLine(); // Limpar o buffer do scanner
+
+        List<ClienteLocacao> clientes = database.listarClientesPorFilme(codFilme);
+
+        if (clientes.isEmpty()) {
+            System.out.println("Nenhum cliente encontrou para o filme especificado.");
+        } else {
+            System.out.println("Clientes que alugaram o filme:");
+            for (ClienteLocacao cliente : clientes) {
+                System.out.println(cliente);
+            }
+        }
+
+    }
+
+    private static void listarClientesComMultasSuperiores() {
+        try {
+            System.out.println("Digite o valor mínimo de multa:");
+            float valorMulta = scanner.nextFloat();
+            scanner.nextLine(); // Limpar o buffer do scanner
+
+            List<Cliente> clientes = database.listarClientesComMultasSuperiores(valorMulta);
+
+            if (clientes.isEmpty()) {
+                System.out.println("Nenhum cliente encontrado com multas superiores a $" + valorMulta);
+            } else {
+                System.out.println("Clientes com multas superiores a $" + valorMulta + ":");
+                for (Cliente cliente : clientes) {
+                    System.out.println(cliente);
+                }
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Entrada inválida. Por favor, insira um valor numérico.");
+            scanner.nextLine(); // Limpar o buffer do scanner
         }
     }
 }

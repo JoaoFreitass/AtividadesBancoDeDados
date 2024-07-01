@@ -158,6 +158,7 @@ public class DataBase {
 
         return filmes;
     }
+
     public List<Ator> listarAtoresPorTituloFilme(String titulo) {
         List<Ator> atores = new ArrayList<>();
 
@@ -184,15 +185,125 @@ public class DataBase {
         return atores;
     }
 
-
-
-    public void fecharConexao() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
+    public Endereco obterEnderecoCliente(int codCliente) {
+        String query = "SELECT e.logradouro, e.tipo_log, e.complemento, e.cidade, e.uf, e.cep, e.numero, e.bairro " +
+                "FROM endereco e " +
+                "JOIN cli c ON e.cod_end = c.fk_cod_end " +
+                "JOIN cliente cli ON cli.cod_cli = c.fk_cod_cli " +
+                "WHERE cli.cod_cli = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, codCliente);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Endereco(
+                            rs.getString("logradouro"),
+                            rs.getString("tipo_log"),
+                            rs.getString("complemento"),
+                            rs.getString("cidade"),
+                            rs.getString("uf"),
+                            rs.getString("cep"),
+                            rs.getString("numero"),
+                            rs.getString("bairro")
+                    );
+                } else {
+                    return null;
+                }
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao fechar conexão com o banco de dados: " + e.getMessage());
+            e.printStackTrace();
+            return null;
         }
     }
-}
+
+    public List<FilmeGeneroCategoria> listarFilmesGenerosCategorias() {
+        String query = "SELECT f.titulo, g.nome AS genero, c.nome AS categoria " +
+                "FROM filmes f " +
+                "JOIN genero g ON f.fk_cod_gen = g.cod_gen " +
+                "JOIN categoria c ON f.fk_cod_cat = c.cod_cat";
+        List<FilmeGeneroCategoria> filmes = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                FilmeGeneroCategoria filme = new FilmeGeneroCategoria(
+                        rs.getString("titulo"),
+                        rs.getString("genero"),
+                        rs.getString("categoria")
+                );
+                filmes.add(filme);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return filmes;
+    }
+
+    public List<ClienteLocacao> listarClientesPorFilme(int codFilme) {
+        String query = "SELECT c.nome, l.data_loc " +
+                "FROM cliente c " +
+                "JOIN locacao l ON c.cod_cli = l.fk_cod_cli " +
+                "JOIN locacao_filme lf ON l.cod_loc = lf.fk_cod_loc " +
+                "WHERE lf.fk_cod_filme = ?";
+        List<ClienteLocacao> clientes = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, codFilme);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ClienteLocacao cliente = new ClienteLocacao(
+                            rs.getString("nome"),
+                            rs.getDate("data_loc")
+                    );
+                    clientes.add(cliente);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return clientes;
+    }
+
+    public List<Cliente> listarClientesComMultasSuperiores(float valorMulta) {
+        List<Cliente> clientes = new ArrayList<>();
+
+        String sql = "SELECT c.cod_cli, c.cpf, c.nome, c.telefone, c.fk_cod_prof " +
+                "FROM cliente c " +
+                "JOIN locacao l ON c.cod_cli = l.fk_cod_cli " +
+                "WHERE l.multa > CAST(? AS money)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setFloat(1, valorMulta);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int codCli = rs.getInt("cod_cli");
+                    String cpf = rs.getString("cpf");
+                    String nome = rs.getString("nome");
+                    String telefone = rs.getString("telefone");
+                    int codProfissao = rs.getInt("fk_cod_prof");
+
+                    Cliente cliente = new Cliente(codCli, cpf, nome, telefone, codProfissao);
+                    clientes.add(cliente);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao listar clientes com multas superiores: " + e.getMessage());
+        }
+
+        return clientes;
+    }
+
+
+
+
+    public void fecharConexao () {
+            try {
+                if (connection != null && !connection.isClosed()) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                System.out.println("Erro ao fechar conexão com o banco de dados: " + e.getMessage());
+            }
+        }
+    }
+
+
