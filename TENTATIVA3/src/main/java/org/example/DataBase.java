@@ -64,7 +64,7 @@ public class DataBase {
                 int codDependente = rs.getInt("cod_dep");
                 String parentesco = rs.getString("parentesco");
 
-                if (codDependente != 0) { // Filtra dependentes inválidos
+                if (codDependente != 0) {
                     clientesDependentes.add(new ClienteDependente(codCliente, nomeCliente, codDependente, parentesco));
                 }
             }
@@ -290,6 +290,82 @@ public class DataBase {
         }
 
         return clientes;
+    }
+
+    public List<Locacao> listarLocacoesPorPeriodo(Date dataInicio, Date dataFim) {
+        List<Locacao> locacoes = new ArrayList<>();
+        String sql = "SELECT cod_loc, fk_cod_cli, data_loc FROM locacao WHERE data_loc BETWEEN ? AND ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setDate(1, new java.sql.Date(dataInicio.getTime()));
+            stmt.setDate(2, new java.sql.Date(dataFim.getTime()));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Locacao locacao = new Locacao(
+                            rs.getInt("cod_loc"),
+                            rs.getInt("fk_cod_cli"),
+                            rs.getDate("data_loc")
+                    );
+                    locacoes.add(locacao);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return locacoes;
+    }
+
+    public List<ClienteFilme> listarClientesEFilmesAlugados() {
+        List<ClienteFilme> clienteFilmes = new ArrayList<>();
+        String sql = "SELECT c.nome, f.titulo, l.data_loc " +
+                "FROM cliente c " +
+                "JOIN locacao l ON c.cod_cli = l.fk_cod_cli " +
+                "JOIN locacao_filme lf ON l.cod_loc = lf.fk_cod_loc " +
+                "JOIN filmes f ON lf.fk_cod_filme = f.cod_filme " +
+                "ORDER BY l.data_loc";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                ClienteFilme clienteFilme = new ClienteFilme(
+                        rs.getString("nome"),
+                        rs.getString("titulo"),
+                        rs.getDate("data_loc")
+                );
+                clienteFilmes.add(clienteFilme);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return clienteFilmes;
+    }
+
+    public List<ClienteCidadeCategoria> listarClientesPorCidadeECategoria(String cidade, int codCategoria) {
+        List<ClienteCidadeCategoria> clienteCidadeCategorias = new ArrayList<>();
+        String sql = "SELECT c.nome AS cliente_nome, e.cidade, cat.nome AS categoria_nome " +
+                "FROM cliente c " +
+                "JOIN cli cli ON c.cod_cli = cli.fk_cod_cli " +
+                "JOIN endereco e ON cli.fk_cod_end = e.cod_end " +
+                "JOIN locacao l ON c.cod_cli = l.fk_cod_cli " +
+                "JOIN locacao_filme lf ON l.cod_loc = lf.fk_cod_loc " +
+                "JOIN filmes f ON lf.fk_cod_filme = f.cod_filme " +
+                "JOIN categoria cat ON f.fk_cod_cat = cat.cod_cat " +
+                "WHERE e.cidade = ? AND f.fk_cod_cat = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, cidade);
+            stmt.setInt(2, codCategoria);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ClienteCidadeCategoria clienteCidadeCategoria = new ClienteCidadeCategoria(
+                            rs.getString("cliente_nome"),
+                            rs.getString("cidade"),
+                            rs.getString("categoria_nome")
+                    );
+                    clienteCidadeCategorias.add(clienteCidadeCategoria);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return clienteCidadeCategorias;
     }
 
 

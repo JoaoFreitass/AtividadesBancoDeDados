@@ -3,6 +3,9 @@ package org.example;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Main {
 
@@ -23,10 +26,14 @@ public class Main {
             System.out.println("8 - Listar todos os filmes e seus respectivos gêneros e categorias");
             System.out.println("9 - Mostrar todos os clientes que alugaram um filme específico e a data de locação");
             System.out.println("10 - Exibir a lista de clientes com multas superiores a um valor específico.  //não funcional");
+            System.out.println("11 - Listar todas as locações feitas em um período específico");
+            System.out.println("12 - Listar os clientes e os filmes que eles alugaram, ordenados por data de locação");
+            System.out.println("13 - Mostrar todos os clientes que moram em uma cidade específica e que alugaram filmes de uma categoria específica");
+
             System.out.println("0 - Sair");
 
             opcao = scanner.nextInt();
-            scanner.nextLine(); // Limpar o buffer do scanner
+            scanner.nextLine();
 
             switch (opcao) {
                 case 1:
@@ -59,6 +66,15 @@ public class Main {
                 case 10:
                     listarClientesComMultasSuperiores();
                     break;
+                case 11:
+                    listarLocacoesPorPeriodo();
+                    break;
+                case 12:
+                    listarClientesEFilmesAlugados();
+                    break;
+                case 13:
+                    listarClientesPorCidadeECategoria();
+                    break;
                 case 0:
                     System.out.println("Encerrando o programa...");
                     break;
@@ -73,7 +89,7 @@ public class Main {
     private static void listarFilmesAlugadosPorCliente() {
         System.out.println("Digite o código do cliente:");
         int codCliente = scanner.nextInt();
-        scanner.nextLine(); // Limpar o buffer do scanner
+        scanner.nextLine();
 
         List<FilmeLocacao> filmesLocados = database.listarFilmesAlugadosPorCliente(codCliente);
 
@@ -95,7 +111,7 @@ public class Main {
     private static void listarFilmesPorGenero() {
         System.out.println("Digite o código do gênero:");
         int codGenero = scanner.nextInt();
-        scanner.nextLine(); // Limpar o buffer do scanner
+        scanner.nextLine();
 
         List<Filme> filmes = database.listarFilmesPorGenero(codGenero);
 
@@ -108,7 +124,7 @@ public class Main {
     private static void listarClientesPorProfissao() {
         System.out.println("Digite o código da profissão:");
         int codProfissao = scanner.nextInt();
-        scanner.nextLine(); // Limpar o buffer do scanner
+        scanner.nextLine();
 
         List<Cliente> clientes = database.listarClientesPorProfissao(codProfissao);
 
@@ -122,7 +138,7 @@ public class Main {
         try {
             System.out.println("Digite o código da categoria:");
             int codCategoria = scanner.nextInt();
-            scanner.nextLine(); // Limpar o buffer do scanner
+            scanner.nextLine();
 
             List<Filme> filmes = database.listarFilmesPorCategoriaEQuantidade(codCategoria);
 
@@ -136,7 +152,7 @@ public class Main {
             }
         } catch (InputMismatchException e) {
             System.out.println("Entrada inválida. Por favor, insira um número inteiro.");
-            scanner.nextLine(); // Limpar o buffer do scanner
+            scanner.nextLine();
         }
     }
 
@@ -159,7 +175,7 @@ public class Main {
     private static void obterEnderecoCompletoCliente() {
         System.out.println("Digite o código do cliente:");
         int codCliente = scanner.nextInt();
-        scanner.nextLine(); // Limpar o buffer do scanner
+        scanner.nextLine();
 
         Endereco endereco = database.obterEnderecoCliente(codCliente);
 
@@ -183,7 +199,7 @@ public class Main {
     private static void listarClientesPorFilme() {
         System.out.println("Digite o código do filme:");
         int codFilme = scanner.nextInt();
-        scanner.nextLine(); // Limpar o buffer do scanner
+        scanner.nextLine();
 
         List<ClienteLocacao> clientes = database.listarClientesPorFilme(codFilme);
 
@@ -202,7 +218,7 @@ public class Main {
         try {
             System.out.println("Digite o valor mínimo de multa:");
             float valorMulta = scanner.nextFloat();
-            scanner.nextLine(); // Limpar o buffer do scanner
+            scanner.nextLine();
 
             List<Cliente> clientes = database.listarClientesComMultasSuperiores(valorMulta);
 
@@ -216,7 +232,50 @@ public class Main {
             }
         } catch (InputMismatchException e) {
             System.out.println("Entrada inválida. Por favor, insira um valor numérico.");
-            scanner.nextLine(); // Limpar o buffer do scanner
+            scanner.nextLine();
+        }
+    }
+
+    private static void listarLocacoesPorPeriodo() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            System.out.println("Digite a data de início (yyyy-MM-dd):");
+            Date dataInicio = sdf.parse(scanner.nextLine());
+            System.out.println("Digite a data de fim (yyyy-MM-dd):");
+            Date dataFim = sdf.parse(scanner.nextLine());
+
+            List<Locacao> locacoes = database.listarLocacoesPorPeriodo(dataInicio, dataFim);
+
+            System.out.println("Locações no período especificado:");
+            for (Locacao locacao : locacoes) {
+                System.out.println(locacao);
+            }
+        } catch (ParseException e) {
+            System.out.println("Formato de data inválido. Por favor, use o formato yyyy-MM-dd.");
+        }
+    }
+
+    private static void listarClientesEFilmesAlugados() {
+        List<ClienteFilme> clienteFilmes = database.listarClientesEFilmesAlugados();
+
+        System.out.println("Clientes e filmes alugados:");
+        for (ClienteFilme clienteFilme : clienteFilmes) {
+            System.out.println(clienteFilme);
+        }
+    }
+
+    private static void listarClientesPorCidadeECategoria() {
+        System.out.println("Digite a cidade:");
+        String cidade = scanner.nextLine();
+        System.out.println("Digite o código da categoria:");
+        int codCategoria = scanner.nextInt();
+        scanner.nextLine();
+
+        List<ClienteCidadeCategoria> clienteCidadeCategorias = database.listarClientesPorCidadeECategoria(cidade, codCategoria);
+
+        System.out.println("Clientes que moram na cidade e alugaram filmes da categoria especificada:");
+        for (ClienteCidadeCategoria clienteCidadeCategoria : clienteCidadeCategorias) {
+            System.out.println(clienteCidadeCategoria);
         }
     }
 }

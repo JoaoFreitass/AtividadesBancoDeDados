@@ -27,9 +27,9 @@ public class Genero {
 
     @Override
     public String toString() {
-        return "Genero{" +
-                "codGen=" + codGen +
-                ", nome='" + nome + '\'' +
-                '}';
+        return "Genero[ " +
+                " Cod. Gênero= " + codGen +
+                "  Nome= " + nome +
+                ']';
     }
 }
